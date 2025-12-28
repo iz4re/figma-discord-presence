@@ -25,8 +25,8 @@ class FigmaMonitor extends EventEmitter {
 
     getFigmaWindowTitle() {
         try {
-            // Simple PowerShell to get window titles containing "Figma"
-            const psCommand = `Get-Process | Where-Object {$_.MainWindowTitle -like '*Figma*'} | Select-Object -ExpandProperty MainWindowTitle -First 1`;
+            // PowerShell to get window title from Figma.exe process ONLY
+            const psCommand = `Get-Process -Name Figma -ErrorAction SilentlyContinue | Where-Object {$_.MainWindowTitle} | Select-Object -ExpandProperty MainWindowTitle -First 1`;
 
             const result = execSync(`powershell -Command "${psCommand}"`, {
                 encoding: 'utf8',
