@@ -1,4 +1,4 @@
-const RPC = require('discord-rpc');
+const RPC = require('discord-rpc-patch');
 
 class DiscordClient {
     constructor(clientId) {
@@ -121,8 +121,6 @@ class DiscordClient {
             return {
                 details: 'Idle',
                 state: 'Not working on any file',
-                largeImageKey: 'figma-logo',
-                largeImageText: 'Figma',
                 startTimestamp: this.startTimestamp
             };
         }
@@ -133,8 +131,6 @@ class DiscordClient {
         const presence = {
             details: details,
             state: state,
-            largeImageKey: 'figma-logo',
-            largeImageText: 'Figma',
             startTimestamp: this.startTimestamp
         };
 
@@ -163,7 +159,6 @@ class DiscordClient {
         return (
             a.details === b.details &&
             a.state === b.state &&
-            a.largeImageKey === b.largeImageKey &&
             JSON.stringify(a.buttons || []) === JSON.stringify(b.buttons || [])
         );
     }

@@ -1,147 +1,113 @@
+// Figma Monitor with Window Title Detection
+const { execSync } = require('child_process');
 const EventEmitter = require('events');
-const FigmaParser = require('./parser');
 
 class FigmaMonitor extends EventEmitter {
     constructor() {
         super();
-        this.parser = new FigmaParser();
         this.currentFile = null;
-        this.isActive = false;
-        this.isRunning = false;
         this.pollInterval = null;
-        this.pollRate = 5000; // Check every 5 seconds
+        this.pollRate = 5000;
     }
 
-    /**
-     * Start monitoring Figma
-     */
-    start() {
-        console.log('Starting Figma monitor...');
-
-        // Do initial check
-        this.check();
-
-        // Start polling
-        this.pollInterval = setInterval(() => {
-            this.check();
-        }, this.pollRate);
-
-        console.log(`Figma monitor started (polling every ${this.pollRate / 1000}s)`);
-    }
-
-    /**
-     * Stop monitoring
-     */
-    stop() {
-        if (this.pollInterval) {
-            clearInterval(this.pollInterval);
-            this.pollInterval = null;
-            console.log('Figma monitor stopped');
+    isFigmaRunning() {
+        try {
+            const result = execSync('tasklist /FI "IMAGENAME eq Figma.exe" /NH', {
+                encoding: 'utf8',
+                timeout: 2000,
+                windowsHide: true
+            });
+            return result.toLowerCase().includes('figma.exe');
+        } catch (error) {
+            return false;
         }
     }
 
-    /**
-     * Perform a check of Figma state
-     */
+    getFigmaWindowTitle() {
+        try {
+            // Simple PowerShell to get window titles containing "Figma"
+            const psCommand = `Get-Process | Where-Object {$_.MainWindowTitle -like '*Figma*'} | Select-Object -ExpandProperty MainWindowTitle -First 1`;
+
+            const result = execSync(`powershell -Command "${psCommand}"`, {
+                encoding: 'utf8',
+                timeout: 3000,
+                windowsHide: true
+            }).trim();
+
+            return result || null;
+        } catch (error) {
+            return null;
+        }
+    }
+
+    parseFileName(title) {
+        if (!title || title === 'Figma') return null;
+
+        // Figma window titles: "FileName – Figma" or "FileName - Figma"
+        let fileName = title
+            .replace(/\s*[–-]\s*Figma\s*$/i, '')
+            .trim();
+
+        if (!fileName || fileName === 'Figma') return null;
+
+        return {
+            name: fileName,
+            url: 'https://www.figma.com'
+        };
+    }
+
+    start() {
+        console.log('✓ Figma monitor started (with title detection)');
+        this.check();
+        this.pollInterval = setInterval(() => {
+            this.check();
+        }, this.pollRate);
+    }
+
+    stop() {
+        if (this.pollInterval) {
+            clearInterval(this.pollInterval);
+        }
+    }
+
     check() {
-        const wasRunning = this.isRunning;
-        const wasActive = this.isActive;
-        const previousFile = this.currentFile;
+        const isRunning = this.isFigmaRunning();
 
-        // Check if Figma is running
-        this.isRunning = this.parser.isFigmaRunning();
-
-        if (!this.isRunning) {
-            // Figma not running
-            if (wasRunning) {
-                console.log('Figma stopped');
+        if (!isRunning) {
+            if (this.currentFile) {
+                console.log('Figma closed');
                 this.currentFile = null;
-                this.isActive = false;
-                this.emit('statusChanged', {
-                    running: false,
-                    active: false
-                });
                 this.emit('fileChanged', null);
             }
             return;
         }
 
-        // Figma is running, check if it's active
-        this.isActive = this.parser.isFigmaActive();
+        // Figma is running, try to get window title
+        const windowTitle = this.getFigmaWindowTitle();
+        const fileInfo = this.parseFileName(windowTitle);
 
-        // Get current file
-        const fileInfo = this.parser.getCurrentFile();
+        // If we can't get title, use generic message
+        const finalFileInfo = fileInfo || {
+            name: 'Working on a design',
+            url: 'https://www.figma.com'
+        };
 
         // Check if file changed
-        const fileChanged = this.hasFileChanged(previousFile, fileInfo);
-
-        if (fileChanged) {
-            console.log('Figma file changed:', fileInfo ? fileInfo.name : 'No file');
-            this.currentFile = fileInfo;
-            this.emit('fileChanged', fileInfo);
-        }
-
-        // Check if active status changed
-        if (wasActive !== this.isActive) {
-            console.log('Figma active status changed:', this.isActive ? 'active' : 'idle');
-            this.emit('statusChanged', {
-                running: this.isRunning,
-                active: this.isActive
-            });
-        }
-
-        // Emit status if Figma just started
-        if (!wasRunning && this.isRunning) {
-            console.log('Figma started');
-            this.emit('statusChanged', {
-                running: this.isRunning,
-                active: this.isActive
-            });
+        if (this.hasFileChanged(this.currentFile, finalFileInfo)) {
+            console.log('✓ Figma file:', finalFileInfo.name);
+            this.currentFile = finalFileInfo;
+            this.emit('fileChanged', finalFileInfo);
         }
     }
 
-    /**
-     * Check if file has changed
-     * @param {Object|null} oldFile
-     * @param {Object|null} newFile
-     * @returns {boolean}
-     */
     hasFileChanged(oldFile, newFile) {
-        // Both null = no change
         if (!oldFile && !newFile) return false;
-
-        // One is null = change
         if (!oldFile || !newFile) return true;
-
-        // Compare file keys
-        return oldFile.key !== newFile.key;
+        return oldFile.name !== newFile.name;
     }
 
-    /**
-     * Get current file info
-     * @returns {Object|null}
-     */
     getCurrentFile() {
         return this.currentFile;
-    }
-
-    /**
-     * Get current status
-     * @returns {Object}
-     */
-    getStatus() {
-        return {
-            running: this.isRunning,
-            active: this.isActive,
-            file: this.currentFile
-        };
-    }
-
-    /**
-     * Force a manual check
-     */
-    forceCheck() {
-        this.check();
     }
 }
 

@@ -2,7 +2,7 @@
     "name": "figma-discord-presence",
     "version": "1.0.0",
     "description": "Update your Discord activity status with a rich presence from Figma",
-    "main": "src/main.js",
+    "main": "simple-main.js",
     "scripts": {
         "start": "electron .",
         "dev": "electron . --dev",
@@ -19,9 +19,9 @@
     "author": "Your Name",
     "license": "MIT",
     "dependencies": {
-        "discord-rpc": "^4.0.1",
-        "electron-store": "^8.1.0",
-        "dotenv": "^16.3.1"
+        "discord-rpc-patch": "^4.0.1",
+        "dotenv": "^16.3.1",
+        "electron-store": "^8.1.0"
     },
     "devDependencies": {
         "electron": "^28.0.0",

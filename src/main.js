@@ -171,6 +171,13 @@ function initializeApp() {
     // Connect to Discord
     discordClient.connect().then(() => {
       console.log('✓ Connected to Discord');
+
+      // Immediately update presence with current Figma state
+      if (figmaMonitor && settingsManager && settingsManager.get('enabled', true)) {
+        const currentFile = figmaMonitor.getCurrentFile();
+        console.log('Setting initial presence, current file:', currentFile);
+        discordClient.updatePresence(currentFile, settingsManager.getPrivacySettings());
+      }
     }).catch((error) => {
       console.error('Failed to connect to Discord:', error);
     });
@@ -186,8 +193,6 @@ function initializeApp() {
 }
 
 // IPC Handlers for settings window
-const { ipcMain } = require('electron');
-
 ipcMain.handle('get-settings', () => {
   if (settingsManager) {
     return settingsManager.getAll();
