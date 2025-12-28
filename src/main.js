@@ -1,4 +1,4 @@
-const { app, BrowserWindow, Tray, Menu, nativeImage } = require('electron');
+const { app, BrowserWindow, Tray, Menu, nativeImage, ipcMain } = require('electron');
 const path = require('path');
 const fs = require('fs');
 
@@ -20,7 +20,7 @@ const DISCORD_CLIENT_ID = process.env.DISCORD_CLIENT_ID || '1234567890123456789'
 function createTray() {
   // Create tray icon
   const iconPath = path.join(__dirname, '../assets/icon.png');
-  
+
   // Create a simple icon if the file doesn't exist
   let trayIcon;
   if (fs.existsSync(iconPath)) {
@@ -29,19 +29,19 @@ function createTray() {
     // Create a simple colored square as fallback
     trayIcon = nativeImage.createEmpty();
   }
-  
+
   tray = new Tray(trayIcon);
   tray.setToolTip('Figma Discord Presence');
-  
+
   updateTrayMenu();
 }
 
 function updateTrayMenu() {
   if (!settingsManager) return;
-  
+
   const isEnabled = settingsManager ? settingsManager.get('enabled', true) : true;
   const currentFile = figmaMonitor ? figmaMonitor.getCurrentFile() : null;
-  
+
   const contextMenu = Menu.buildFromTemplate([
     {
       label: 'Figma Discord Presence',
@@ -92,7 +92,7 @@ function updateTrayMenu() {
       }
     }
   ]);
-  
+
   tray.setContextMenu(contextMenu);
 }
 
@@ -101,7 +101,7 @@ function createSettingsWindow() {
     settingsWindow.focus();
     return;
   }
-  
+
   settingsWindow = new BrowserWindow({
     width: 500,
     height: 600,
@@ -114,20 +114,20 @@ function createSettingsWindow() {
       nodeIntegration: false
     }
   });
-  
+
   settingsWindow.loadFile(path.join(__dirname, 'ui/settings.html'));
-  
+
   settingsWindow.on('closed', () => {
     settingsWindow = null;
   });
-  
+
   // Remove menu bar
   settingsWindow.setMenuBarVisibility(false);
 }
 
 function initializeApp() {
   console.log('Initializing Figma Discord Presence...');
-  
+
   // Try to load modules
   try {
     SettingsManager = require('./settings/manager');
@@ -136,38 +136,38 @@ function initializeApp() {
   } catch (error) {
     console.warn('Settings manager not available yet:', error.message);
   }
-  
+
   try {
     FigmaMonitor = require('./figma/monitor');
     figmaMonitor = new FigmaMonitor();
     console.log('✓ Figma monitor loaded');
-    
+
     // Listen for Figma file changes
     figmaMonitor.on('fileChanged', (fileInfo) => {
       console.log('Figma file changed:', fileInfo);
       updateTrayMenu();
-      
+
       if (discordClient && settingsManager && settingsManager.get('enabled', true)) {
         discordClient.updatePresence(fileInfo, settingsManager.getPrivacySettings());
       }
     });
-    
+
     figmaMonitor.on('statusChanged', (status) => {
       console.log('Figma status changed:', status);
       updateTrayMenu();
     });
-    
+
     // Start monitoring
     figmaMonitor.start();
   } catch (error) {
     console.warn('Figma monitor not available yet:', error.message);
   }
-  
+
   try {
     DiscordClient = require('./discord/client');
     discordClient = new DiscordClient(DISCORD_CLIENT_ID);
     console.log('✓ Discord client loaded');
-    
+
     // Connect to Discord
     discordClient.connect().then(() => {
       console.log('✓ Connected to Discord');
@@ -177,13 +177,48 @@ function initializeApp() {
   } catch (error) {
     console.warn('Discord client not available yet:', error.message);
   }
-  
+
   // Create system tray
   createTray();
-  
+
   console.log('✓ Application initialized');
   console.log('Right-click the tray icon to open settings');
 }
+
+// IPC Handlers for settings window
+const { ipcMain } = require('electron');
+
+ipcMain.handle('get-settings', () => {
+  if (settingsManager) {
+    return settingsManager.getAll();
+  }
+  return {};
+});
+
+ipcMain.handle('update-setting', (event, key, value) => {
+  if (settingsManager) {
+    settingsManager.set(key, value);
+    updateTrayMenu();
+
+    // Apply changes immediately
+    if (key === 'enabled' && !value && discordClient) {
+      discordClient.clearPresence();
+    }
+  }
+});
+
+ipcMain.handle('reconnect-discord', async () => {
+  if (discordClient) {
+    return await discordClient.reconnect();
+  }
+});
+
+ipcMain.handle('get-current-file', () => {
+  if (figmaMonitor) {
+    return figmaMonitor.getCurrentFile();
+  }
+  return null;
+});
 
 // App lifecycle
 app.whenReady().then(() => {
@@ -205,10 +240,3 @@ app.on('before-quit', () => {
     discordClient.disconnect();
   }
 });
-
-// Expose update function for IPC
-if (settingsWindow) {
-  app.on('settings-changed', () => {
-    updateTrayMenu();
-  });
-}
