@@ -2,7 +2,6 @@
 
 ![Version](https://img.shields.io/badge/version-1.0.0-blue.svg)
 ![Platform](https://img.shields.io/badge/platform-Windows-lightgrey.svg)
-![License](https://img.shields.io/badge/license-MIT-green.svg)
 
 Update your Discord activity status with Rich Presence from Figma! This lightweight desktop application runs in your system tray and automatically displays what file you're working on in Figma.
 
