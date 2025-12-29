@@ -5,21 +5,21 @@
 
 Update your Discord activity status with Rich Presence from Figma! This lightweight desktop application runs in your system tray and automatically displays what file you're working on in Figma.
 
-## ✨ Features
+## Features
 
-- 🎨 **Shows your Figma activity** - Displays the current file you're working on
-- 🖥️ **System tray application** - Runs quietly in the background
-- 🔒 **Privacy controls** - Hide filenames, buttons, or activity status
-- 🎚️ **Easy toggle** - Enable or disable presence reporting anytime
-- ⚡ **Smart updates** - Respects Discord's 15-second rate limit
-- 🔄 **Manual reconnection** - Reconnect to Discord with one click
-- 💤 **Idle detection** - Shows when you're actively using Figma vs idle
+- **Shows your Figma activity** - Displays the current file you're working on
+- **System tray application** - Runs quietly in the background
+- **Privacy controls** - Hide filenames, buttons, or activity status
+- **Easy toggle** - Enable or disable presence reporting anytime
+- **Smart updates** - Respects Discord's 15-second rate limit
+- **Manual reconnection** - Reconnect to Discord with one click
+- **Idle detection** - Shows when you're actively using Figma vs idle
 
-## 📸 Screenshot
+## Screenshot
 
 > **Note**: The app runs in the system tray. Right-click the icon to access settings.
 
-## 🚀 Quick Start
+## Quick Start
 
 ### Prerequisites
 
@@ -66,7 +66,7 @@ Update your Discord activity status with Rich Presence from Figma! This lightwei
 
 5. **Check your system tray** - You should see the app icon. Right-click it to open settings!
 
-## 🎨 Adding Custom Icon (Optional)
+## Adding Custom Icon (Optional)
 
 The app works without a custom icon, but you can add one:
 
@@ -76,7 +76,7 @@ The app works without a custom icon, but you can add one:
 
 Check `assets/README.md` for more details.
 
-## 🔧 Usage
+## Usage
 
 ### First Time Setup
 
@@ -104,7 +104,7 @@ Right-click the system tray icon and select "Settings" to access:
 - **Reconnect to Discord** - Force reconnection
 - **Quit** - Close the application
 
-## 🛠️ Development
+## Development
 
 ### Running in Development
 
@@ -120,7 +120,7 @@ npm run dist
 
 This creates a distributable Windows executable in the `dist` folder.
 
-## 📝 How It Works
+## How It Works
 
 This application monitors your Figma Desktop installation by:
 
@@ -129,7 +129,7 @@ This application monitors your Figma Desktop installation by:
 3. **Detecting the active file** and window focus state
 4. **Updating Discord** via RPC protocol (max once every 15 seconds)
 
-## 🐛 Troubleshooting
+## Troubleshooting
 
 ### Discord presence not showing
 
@@ -158,30 +158,20 @@ This application monitors your Figma Desktop installation by:
 
 This is a temporary API limitation. The app will work fine with the default/empty icon, or you can manually add your own icon to the `assets` folder.
 
-## 📋 Requirements
+## Requirements
 
 - **Windows 10/11** (Windows-specific implementation)
 - **Figma Desktop** installed normally (not modified)
 - **Discord** with activity status enabled
 - **Node.js** v16 or higher
 
-## 🤝 Contributing
-
-Contributions are welcome! Please feel free to submit a Pull Request.
-
-1. Fork the repository
-2. Create your feature branch (`git checkout -b feature/AmazingFeature`)
-3. Commit your changes (`git commit -m 'Add some AmazingFeature'`)
-4. Push to the branch (`git push origin feature/AmazingFeature`)
-5. Open a Pull Request
-
-## 🙏 Acknowledgments
+## Acknowledgments
 
 - Inspired by [bryanberger/figma-discord-presence](https://github.com/bryanberger/figma-discord-presence) (macOS version)
 - Built with [Electron](https://www.electronjs.org/)
 - Discord RPC via [discord-rpc](https://www.npmjs.com/package/discord-rpc)
 
-## 💡 Tips
+## Tips
 
 - The app runs in the background - look for it in the system tray
 - Privacy settings apply immediately, no restart needed
@@ -189,7 +179,7 @@ Contributions are welcome! Please feel free to submit a Pull Request.
 - File detection updates every 5 seconds
 - Discord presence updates respect the 15-second rate limit
 
-## 🔮 Future Enhancements
+## Future Enhancements
 
 - macOS support
 - Linux support
@@ -199,6 +189,8 @@ Contributions are welcome! Please feel free to submit a Pull Request.
 
 ---
 
-Made with ❤️ for Figma & Discord users
+Made with love for Figma & Discord users 
+
+and special thanks for Yudz32 (the king of code) haha jk
 
 **Not affiliated with Figma or Discord**
